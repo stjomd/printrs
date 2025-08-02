@@ -1,4 +1,8 @@
 use std::collections::HashMap;
+use std::io;
+
+use crate::error::PrintError;
+use crate::options::PrintOptions;
 
 // MARK: - Public API Methods
 
@@ -6,6 +10,15 @@ use std::collections::HashMap;
 /// If no printers are available on this system, returns an empty list.
 pub fn get_printers() -> Vec<Printer> {
 	PlatformSpecificApi::get_printers()
+}
+
+/// Prints the contents of each of the specified [`readers`].
+pub fn print<I, R>(readers: I, options: PrintOptions) -> Result<(), PrintError>
+where
+	I: IntoIterator<Item = R>,
+	R: io::Read,
+{
+	PlatformSpecificApi::print(readers, options)
 }
 
 // MARK: - Public API trait
@@ -16,14 +29,18 @@ pub fn get_printers() -> Vec<Printer> {
 pub struct PlatformSpecificApi;
 /// A trait that defines the public API of this crate.
 pub trait CrossPlatformApi {
-	/// See [`get_printers()`].
+	/// See [`crate::print::get_printers()`].
 	fn get_printers() -> Vec<Printer>;
+	/// See [`crate::print::print()`].
+	fn print<I, R>(readers: I, options: PrintOptions) -> Result<(), PrintError>
+	where
+		I: IntoIterator<Item = R>,
+		R: io::Read;
 }
 
 // MARK: - Structs
 
 /// A struct representing a printer.
-#[allow(dead_code)]
 #[derive(Debug)]
 pub struct Printer {
 	pub name: String,
